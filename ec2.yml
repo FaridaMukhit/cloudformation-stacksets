@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This template creates ec2 intance for ELK Stack" 
+Parameters: 
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+  
+  InstanceType:
+    Description: "EC2 instance type"
+    Type: String 
+    Default: t2.micro
+    AllowedValues: 
+      - t2.micro
+      - t2.small
+      - t2.medium 
+      - t2.large
+
+  VpcIdParameter:
+    Description: "The Id of the Vpc You want your server on"
+    Type: AWS::EC2::VPC::Id
+
+  SubnetIds:
+    Description: Choose which subnets should be deployed to
+    Type: List<AWS::EC2::Subnet::Id>
+
+Resources:     
+  Ec2Instance: 
+    Type: "AWS::EC2::Instance" 
+    Properties: 
+      ImageId: ami-0c00691c4d106ae97
+      InstanceType: !Ref InstanceType                                       
+      KeyName: !Ref KeyName
+      SubnetId: !Select [ 0, !Ref SubnetIds ]
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup 
+      Tags:
+      - Key: owner
+        Value: fmukhit
+      - Key: team
+        Value: infra
+      - Key: project-name
+        Value: ap4
+      - Key: owner-contact
+        Value: fmukhit@akumoproject.com
+      - Key: name
+        Value: infra-log-elk-ec2-cf-main
+      - Key: managedby
+        Value: cf
+      - Key: git-url
+        Value: na
+      - Key: env
+        Value: log
+
+  InstanceSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "This is a security group for ELK Instance"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 98.227.136.153/32
+      
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 98.227.136.153/32
+
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 98.227.136.153/32
+
+      VpcId: !Ref VpcIdParameter
+      Tags:
+      - Key: owner
+        Value: fmukhit
+      - Key: team
+        Value: infra
+      - Key: project-name
+        Value: ap4
+      - Key: owner-contact
+        Value: fmukhit@akumoproject.com
+      - Key: name
+        Value: infra-log-elk-sg-cf-main
+      - Key: managedby
+        Value: cf
+      - Key: git-url
+        Value: na
+      - Key: env
+        Value: log
+  
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties: 
+      InstanceId: !Ref Ec2Instance
+  
